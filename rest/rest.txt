@@ -1,0 +1,78 @@
+Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+    Explain what an API is and why software needs them
+    Describe what REST is and the problem it solves
+    Identify the client-server model in everyday applications you already use
+    Explain why APIs matter for AI engineering specifically
+
+Imagine you're at a restaurant. You sit down, look at the menu, and decide what you want. You don't walk into the kitchen and start cooking. Instead, you tell a waiter what you'd like, and the waiter carries your request to the kitchen. The kitchen prepares your order and the waiter brings it back to your table.
+
+That's exactly how software communicates over the internet:
+
+    You (the customer) = the client (a browser, a mobile app, a Python script)
+    The kitchen = the server (a computer running software that has the data or capability you need)
+    The waiter = the API (the defined way to make requests and receive responses)
+    The menu = the API documentation (tells you what you can ask for and how to ask for it)
+
+An API, Application Programming Interface, is a set of rules that lets one piece of software talk to another. When you check the weather on your phone, the weather app (client) sends a request to a weather service (server) through its API. When you search for a product on Amazon, your browser (client) sends a request to Amazon's servers through their API. When you ask ChatGPT a question, the chat interface (client) sends your message to OpenAI's servers through their API.
+
+APIs are everywhere. Every time you use an app that connects to the internet, APIs are working behind the scenes.
+Why Should You Care?
+
+As an AI engineer, APIs are central to everything you'll build:
+
+    You'll consume APIs to access AI models (sending prompts to OpenAI, Anthropic, or Hugging Face)
+    You'll build APIs to expose your own AI services (a FastAPI backend that serves predictions or RAG responses)
+    You'll connect APIs together (your frontend calls your backend, which calls a vector database, which calls an LLM)
+
+Module 3 taught you to store and retrieve data from a database. That's great, but your database sits on one machine. APIs are how that data (and the logic around it) becomes accessible to the outside world. Without APIs, your AI model would work on your laptop and nowhere else.
+What is REST?
+
+REST stands for Representational State Transfer. That's a mouthful, so let's break it down with a simpler definition:
+
+REST is a set of conventions for building APIs that use standard web protocols (HTTP) to let clients create, read, update, and delete resources on a server.
+
+Before REST became the dominant approach in the mid-2000s, there were many competing ways to build APIs, SOAP, XML-RPC, custom protocols, each with its own complexity. REST simplified everything by saying: "We already have HTTP, which the entire web runs on. Let's use HTTP's built-in features, URLs, methods, status codes, as the foundation for APIs."
+
+The key ideas behind REST:
+
+1. Everything is a resource. A resource is any piece of data or object the server manages, a user, a product, a blog post, an AI model's response. Each resource has a unique address (a URL).
+
+2. You interact with resources using standard HTTP methods. Want to read a resource? Use GET. Want to create one? Use POST. Want to update one? Use PUT. Want to delete one? Use DELETE.
+
+3. The server doesn't remember you between requests. Each request carries all the information the server needs. This is called statelessness, and it makes APIs simpler and more scalable.
+
+4. Responses include the data you asked for (or an explanation of what went wrong). The server sends back data, usually in JSON format, along with a status code that tells you whether your request succeeded.
+A Real Example
+
+Suppose you're building a task manager app and you have a REST API for it:
+Your app wants to see all tasks:
+  → GET <https://api.taskmanager.com/tasks>
+  ← Server responds with a list of tasks (JSON)
+
+Your app wants to create a new task:
+  → POST <https://api.taskmanager.com/tasks>
+    (with task details in the request body)
+  ← Server responds with the created task (JSON)
+
+Your app wants to update task #42:
+  → PUT <https://api.taskmanager.com/tasks/42>
+    (with updated details in the request body)
+  ← Server responds with the updated task (JSON)
+
+Your app wants to delete task #42:
+  → DELETE <https://api.taskmanager.com/tasks/42>
+  ← Server responds with confirmation
+
+Notice the pattern: the URL identifies the resource (/tasks or /tasks/42), and the HTTP method identifies the action (GET, POST, PUT, DELETE). That's REST in a nutshell.
+REST vs. Other API Styles
+
+REST isn't the only way to build APIs, but it's by far the most common for web applications:
+
+    REST - Resource-based, uses HTTP methods, returns JSON. What most web APIs use today.
+    GraphQL - Client specifies exactly what data it wants. Popular for complex frontend apps.
+    gRPC - Binary protocol, very fast, used for internal service-to-service communication.
+
+For this course, and for most AI engineering work, REST is what you'll use and what you'll build.
