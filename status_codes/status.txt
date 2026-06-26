@@ -1,0 +1,121 @@
+Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+    Categorize status codes by their first digit (1xx through 5xx)
+    Identify the 10 most common status codes and what they mean
+    Distinguish between client errors (4xx) and server errors (5xx)
+    Interpret status codes to debug API issues
+
+When you send a request to a server, the response always includes a three-digit number. That number is a status code, and it tells you exactly what happened, or what went wrong.
+
+Status codes are the server's way of talking back to you. They're like a doctor saying "all clear," "I need more information," or "something went wrong on my end." Learning to read them is one of the most practical skills in API work. When something breaks, the status code is usually the first clue.
+
+
+The Five Families
+----------------------------------
+Status codes are grouped by their first digit. Each group tells a different story:
+
+Range
+	1. 1xx
+    2. 2xx
+    3. 3xx
+    4. 4xx
+    5. 5xx
+Category
+    1. Informational
+    2. Success
+    3. Redirection
+    4. Client Error
+    5. Server Error
+Meaning
+    1. "I received your request and I'm working on it." (Rare — you'll almost never see these.)
+    2. "Everything worked. Here's what you asked for."
+    3. "What you want has moved. Go look over there instead."
+    4. "You made a mistake in your request."
+    5. "I made a mistake trying to handle your request."
+
+The most important distinction: 4xx means you (the client) did something wrong. 5xx means the server did something wrong. When debugging, this tells you where to look.
+
+
+The Status Codes You'll Use Every Day
+==================================
+You don't need to memorize all 60+ status codes. Here are the ones that matter most:
+
+2xx - Success
+----------------------------------
+200 OK - The request succeeded. This is the most common status code. GET returned data, PUT/PATCH updated something, DELETE removed something.
+
+201 Created - The request succeeded and a new resource was created. You'll see this after a successful POST. The response usually includes the created resource with its new ID.
+
+204 No Content - The request succeeded, but there's nothing to send back. Common after a DELETE, "yes, I deleted it, and there's nothing more to say."
+
+3xx - Redirection
+----------------------------------
+301 Moved Permanently - The resource has a new permanent URL. The client should use the new URL from now on.
+
+304 Not Modified - The resource hasn't changed since the client last requested it. Used with caching to avoid re-downloading unchanged data.
+
+4xx - Client Errors
+----------------------------------
+400 Bad Request - The server can't understand your request. Usually means you sent malformed data — missing required fields, wrong data types, invalid JSON.
+
+401 Unauthorized - You need to authenticate (prove who you are). This usually means you forgot to include an authentication token, or the token is invalid.
+
+403 Forbidden - You've authenticated, but you don't have permission to access this resource. "I know who you are, but you're not allowed to do that."
+
+The difference between 401 and 403 is subtle but important: 401 means "who are you?" and 403 means "I know who you are, and the answer is no."
+
+404 Not Found - The resource doesn't exist. Either the URI is wrong or the resource has been deleted. This is probably the most famous status code, you've seen it in your browser.
+
+405 Method Not Allowed - The resource exists, but it doesn't support the method you used. For example, trying to DELETE a resource that only allows GET.
+
+422 Unprocessable Entity - The request format is correct, but the data doesn't pass validation. For example, sending an email field with "not-an-email." You'll see this a lot when working with FastAPI and Pydantic validation in Module 5.
+
+429 Too Many Requests - You've hit a rate limit. The server is saying "slow down." Common with APIs that restrict how many calls you can make per minute/hour.
+5xx - Server Errors
+
+500 Internal Server Error - Something went wrong on the server. This is the generic "something broke" error. As a client, you can't fix this — the server needs to be fixed.
+
+502 Bad Gateway - The server was acting as a proxy and received a bad response from the upstream server.
+
+503 Service Unavailable - The server is temporarily down, usually for maintenance or because it's overloaded.
+
+
+Reading Status Codes Like a Developer
+==================================
+When an API call fails, the status code tells you where to start debugging:
+
+Got a 4xx? The problem is in your request.
+
+    400: check your request body (malformed JSON? missing fields?)
+    401: check your authentication token
+    403: check your permissions
+    404: check the URI (typo? wrong ID?)
+    422: check your data types and required fields
+
+Got a 5xx? The problem is on the server.
+
+    500: the server has a bug, not your fault, but you may need to report it
+    503: the server is down, try again later
+
+Got a 2xx? Everything worked. Move on.
+
+This triage process will save you hours of debugging. Always check the status code before examining anything else in the response.
+
+
+The Response Body Tells the Rest of the Story
+----------------------------------
+Status codes give you the category of the result, but the response body often includes more detail. A well-designed API returns helpful error messages:
+{
+  "status": 422,
+  "detail": "Validation error",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Not a valid email address"
+    }
+  ]
+}
+
+When you build your own APIs in Module 5, you'll design these error responses. Good error messages make debugging dramatically easier for anyone using your API.

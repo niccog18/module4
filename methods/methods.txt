@@ -1,0 +1,137 @@
+In the last lesson, you learned that REST uses nouns (resources) in the URI and gets its verbs from somewhere else. That "somewhere else" is HTTP methods, also called HTTP verbs. These are the actions you can perform on a resource.
+
+Think of it like a library. The resource is a book. The things you can do with it are: read it, add a new one to the shelf, replace a damaged copy, or remove it from the collection. In REST, these actions map directly to HTTP methods.
+
+The Five Core Methods
+=================================
+GET - Read / Retrieve
+---------------------------------
+GET asks the server to send you data. It doesn't change anything on the server, it's purely a read operation.
+GET /books          ← "Give me all books"
+GET /books/42       ← "Give me book 42"
+GET /books?genre=fiction  ← "Give me fiction books"
+
+GET is safe, calling it has no side effects. You can call GET /books a thousand times and nothing changes on the server. The data just gets sent to you.
+
+POST - Create
+---------------------------------
+POST asks the server to create a new resource. You send the data for the new resource in the request body.
+POST /books         ← "Create a new book" (book data in request body)
+POST /users         ← "Create a new user" (user data in request body)
+
+POST is not safe, it changes the server's state by creating something new. It's also not idempotent, sending the same POST request twice creates two resources. (We'll define idempotent precisely in a moment.)
+
+PUT - Replace / Update (Full)
+---------------------------------
+PUT asks the server to replace a resource entirely. You send the complete updated version.
+PUT /books/42       ← "Replace book 42 with this new version"
+
+With PUT, you send the entire resource. If a book has title, author, price, and genre, you send all four fields, even the ones that haven't changed. The server replaces the old version entirely.
+
+PATCH - Update (Partial)
+---------------------------------
+PATCH asks the server to update part of a resource. You send only the fields that changed.
+PATCH /books/42     ← "Update just the price of book 42"
+
+The difference between PUT and PATCH is like the difference between rewriting an entire document versus using a red pen to correct one paragraph.
+
+DELETE - Remove
+---------------------------------
+DELETE asks the server to remove a resource.
+DELETE /books/42    ← "Remove book 42"
+DELETE /users/7     ← "Remove user 7"
+
+CRUD Mapping
+=================================
+CRUD - Create, Read, Update, Delete, is the standard set of data operations. HTTP methods map directly to CRUD:
+---------------------------------
+CRUD Operation
+	1. Read
+    2. Update(partial)
+    3. Create
+    4. Update(full)
+    5. Delete
+HTTP Method
+	1. GET
+    2. PATCH
+    3. POST
+    4. PUT
+    5. DELETE
+Example
+    1. GET / books/42
+    2. PATCH /books/42
+    3. POST /books
+    4. PUT /books/42
+    5. DELETE /books/42
+
+This mapping is worth memorizing. Every REST API you encounter, and every one you build, follows it.
+
+
+Safety and Idempotency
+==================================
+Two properties help you understand what to expect from each method:
+
+Safe means the method doesn't change anything on the server. It's read-only.
+
+Idempotent means calling the method multiple times has the same effect as calling it once. If you DELETE /books/42 twice, the book is still deleted, the second call doesn't do anything extra (it just returns a "not found" response).
+---------------------------------
+Method
+	1. POST
+    2. PATCH
+    3. GET
+    4. PUT
+    5. DELETE
+Safe?
+	1. ❌ No
+    2. ❌ No
+    3. ✅ Yes
+    4. ❌ No
+    5. ❌ No
+Idempotent?
+    1. ❌ No
+    2. ❌ Not guaranteed
+    3. ✅ Yes
+    4. ✅ Yes
+    5. ✅ Yes
+
+Why does this matter? When building systems, you need to know what happens if a request is accidentally sent twice (a common problem with unreliable networks). If GET is sent twice, no problem, it's safe. If POST is sent twice, you might create duplicate records. Understanding these properties helps you build robust systems.
+
+
+PUT vs. PATCH: When to Use Which
+==================================
+This distinction trips up a lot of people, so here's a clear example.
+
+Suppose you have a user resource:
+{
+  "id": 42,
+  "name": "Alice Chen",
+  "email": "alice@example.com",
+  "role": "student"
+}
+
+PUT /users/42 - you must send the complete resource:
+{
+  "name": "Alice Chen",
+  "email": "alice.chen@newdomain.com",
+  "role": "student"
+}
+
+If you leave out role, the server might set it to null. PUT replaces the entire resource.
+
+PATCH /users/42 - send only what changed:
+{
+  "email": "alice.chen@newdomain.com"
+}
+
+Everything else stays the same. PATCH is more efficient when you're only changing one field.
+
+In practice, many APIs use PUT for all updates and don't implement PATCH. Others use PATCH exclusively. You'll see both in the wild.
+
+
+Methods You'll See Less Often
+==================================
+HEAD - identical to GET but returns only the headers, not the body. Useful for checking if a resource exists without downloading it.
+
+OPTIONS - asks the server what methods are allowed on a resource. Used by browsers for CORS preflight checks (you'll encounter this in Module 5).
+
+For this course, focus on GET, POST, PUT, PATCH, and DELETE. These are the methods you'll use 99% of the time.

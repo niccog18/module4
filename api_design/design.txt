@@ -1,0 +1,116 @@
+Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+    Design clean, intuitive URIs that follow REST conventions
+    Explain the difference between resources, collections, and sub-resources
+    Apply naming conventions (plural nouns, no verbs, lowercase)
+    Describe why statelessness matters for scalability
+
+In the last lesson, you learned what REST is. Now you'll learn what good REST looks like. There's a difference between an API that technically works and one that's a pleasure to use. The principles in this lesson are what separate the two.
+
+If you've ever used a website with confusing navigation, where you can't figure out where things are or how to get back to where you were, you've experienced bad design. APIs can have the same problem. A well-designed API is one where a developer can look at the URI and guess what it does, even without reading the documentation.
+Resources: The Nouns of Your API
+
+In REST, everything revolves around resources. A resource is any thing your API lets you interact with. In a bookstore API:
+
+    Books are a resource
+    Authors are a resource
+    Orders are a resource
+    Reviews are a resource
+
+Resources are nouns, not verbs. This is one of the most important rules in REST design, and one of the most commonly broken.
+
+Good (nouns):
+/books
+/authors
+/orders
+
+Bad (verbs):
+/getBooks
+/createAuthor
+/deleteOrder
+
+Why no verbs? Because the HTTP method (GET, POST, PUT, DELETE) already provides the verb. You don't need /deleteOrder when you have DELETE /orders/42. Putting the verb in the URI is redundant and makes the API harder to predict.
+Collections and Individual Resources
+
+Resources come in two forms:
+
+Collections - a group of resources of the same type:
+/books          ← all books
+/users          ← all users
+
+Individual resources - one specific item, identified by an ID:
+/books/15       ← book with ID 15
+/users/42       ← user with ID 42
+
+Convention: collection names are plural. Use /books, not /book. This reads naturally: "give me all books" (GET /books) or "give me book 15" (GET /books/15).
+Nested Resources (Sub-Resources)
+
+Resources can have relationships. An author has books. An order has items. A user has posts. You express these relationships by nesting URIs:
+/authors/7/books        ← all books by author 7
+/orders/100/items       ← all items in order 100
+/users/3/posts          ← all posts by user 3
+/users/3/posts/12       ← post 12 by user 3
+
+The hierarchy reads left to right like a sentence: "author 7's books" or "user 3's post 12." This makes APIs self-documenting, the URI tells you the relationship.
+
+Rule of thumb: don't nest deeper than two levels. /users/3/posts/12/comments/5/reactions is technically valid but hard to work with. If you're nesting that deep, the inner resource probably deserves its own top-level endpoint: /comments/5/reactions.
+URI Naming Conventions
+
+Consistent naming makes APIs predictable. Here are the standard conventions:
+
+Use lowercase: /users/42/posts, not /Users/42/Posts
+
+Use hyphens for multi-word resources: /blog-posts, not /blogPosts or /blog_posts
+
+No trailing slashes: /users, not /users/
+
+No file extensions: /users/42, not /users/42.json
+
+Use query parameters for filtering, not URI segments:
+# Good — filter with query parameters
+/books?genre=fiction&year=2024
+
+# Bad — filter baked into the URI
+/books/fiction/2024
+
+Query parameters (?key=value) are the standard way to filter, sort, and paginate collections. The URI path identifies what resource you want; query parameters refine how you want it.
+Statelessness in Practice
+
+You learned that REST is stateless, the server doesn't remember previous requests. Here's what that looks like in practice.
+
+Stateful (not REST):
+Request 1: POST /login (server remembers you're logged in)
+Request 2: GET /my-profile (server knows who "me" is from memory)
+
+Stateless (REST):
+Request 1: POST /auth/token (server gives you a token)
+Request 2: GET /users/42 with Authorization: Bearer <token>
+           (you prove who you are on EVERY request)
+
+In the stateless model, every request is self-contained. The token carries your identity. If the server crashes and restarts between your two requests, nothing breaks, your second request still has everything it needs.
+
+This is why REST scales well. With stateless APIs, you can put 100 servers behind a load balancer and any server can handle any request. No server needs to know what another server did five seconds ago.
+What Good Design Looks Like: A Complete Example
+
+Imagine you're designing an API for a study tracking application. Here's how you'd structure the resources:
+# Users
+GET    /users              ← list all users
+POST   /users              ← create a new user
+GET    /users/42           ← get user 42
+PUT    /users/42           ← update user 42
+DELETE /users/42           ← delete user 42
+
+# User's study sessions
+GET    /users/42/sessions           ← all sessions for user 42
+POST   /users/42/sessions           ← create a session for user 42
+GET    /users/42/sessions/7         ← specific session
+
+# Courses (top-level resource)
+GET    /courses                     ← all courses
+GET    /courses?difficulty=beginner  ← filtered by difficulty
+GET    /courses/5                   ← specific course
+GET    /courses/5/lessons           ← lessons in course 5
+
+Even without documentation, you can read these URIs and understand what they do. That's the goal of good REST design.
