@@ -1,0 +1,108 @@
+Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+    Explain what HTTP headers are and why they exist
+    Identify the most common request and response headers
+    Describe the role of Content-Type and Accept headers in data negotiation
+    Use headers to control caching, authentication, and content format
+
+In the last lesson, you saw that both requests and responses carry headers, metadata that travels alongside the actual data. If the body of a request is a letter, headers are everything written on the envelope: the return address, the priority level, the stamp that proves you paid for delivery.
+
+Headers might seem like a minor detail, but they control critical behavior: what format data arrives in, whether you're authenticated, whether the response was cached, how much data you're allowed to request, and more. When an API call works in one tool but fails in another, the answer is almost always in the headers.
+What Headers Look Like
+
+Headers are key-value pairs. Each one is a single line:
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Accept: application/json
+Cache-Control: no-cache
+
+The key is case-insensitive (Content-Type and content-type are the same), though convention uses Title-Case. The value after the colon can be almost anything, a media type, a token, a number, a date.
+Request Headers You'll Use Most
+
+These are headers your client sends to the server:
+
+Content-Type - Tells the server what format your request body is in.
+Content-Type: application/json          ← "I'm sending JSON"
+Content-Type: application/x-www-form-urlencoded  ← "I'm sending form data"
+Content-Type: multipart/form-data       ← "I'm uploading a file"
+
+This is the most important request header. If you send JSON but forget to set Content-Type: application/json, the server might not know how to read your data. (The requests library handles this for you when you use the json= parameter.)
+
+Accept - Tells the server what format you want the response in.
+Accept: application/json    ← "Please send JSON back"
+Accept: text/html           ← "Please send HTML back"
+Accept: */*                 ← "I'll take anything"
+
+Most REST APIs only return JSON, so Accept: application/json is standard. Some APIs support multiple formats, the Accept header lets you choose.
+
+Authorization - Carries your authentication credentials.
+Authorization: Bearer <your-token-here>
+Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=
+
+You'll work with this extensively in the Authentication lesson and again in Module 5 when you implement JWT auth.
+
+User-Agent - Identifies the client making the request.
+User-Agent: python-requests/2.31.0
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+
+Some APIs block requests without a User-Agent or use it to customize responses. The requests library sets this automatically.
+Response Headers You'll Read Most
+
+These are headers the server sends back to you:
+
+Content-Type - Tells you what format the response body is in.
+Content-Type: application/json; charset=utf-8
+
+Always check this before parsing the response. If you call response.json() on a response with Content-Type: text/html, you'll get an error.
+
+Content-Length - The size of the response body in bytes.
+Content-Length: 1256
+
+X-RateLimit-Remaining and X-RateLimit-Limit - How many API calls you have left before being throttled.
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 97
+X-RateLimit-Reset: 1708905600
+
+Rate limiting is how APIs protect themselves from being overwhelmed. When you see X-RateLimit-Remaining: 0, stop making requests and wait for the reset time.
+
+Cache-Control - Instructions for caching the response.
+Cache-Control: max-age=3600    ← "This data is valid for 1 hour"
+Cache-Control: no-cache        ← "Always ask the server for fresh data"
+
+Content Types: The Format Negotiation
+
+The most common content types you'll encounter:
+
+Content-Type
+	1. text/html
+    2. application/xml
+    3. application/pcetet-stream
+    4. application/json
+    5. text/plain
+    6. multipart/form-data
+What It Is
+	1. What it is 
+    2. HTML webpage
+    3. XML data 
+    4. JSON data 
+    5. Plain text 
+    6. File uploads
+When You'll See It
+    1. Browser responses, error pages 
+    2. Older APIs, some enterprise systems
+    3. File downloads
+    4. Almost every REST API
+    5. Simple responses, logs
+    6. When sending files to an API
+
+For this course, application/json is the one that matters. JSON is the lingua franca of REST APIs.
+Custom Headers
+
+APIs can define their own headers using the X- prefix (though this convention is technically deprecated, it's still widely used):
+X-Request-ID: abc-123-def         ← Unique ID for tracking this request
+X-API-Version: 2.0                ← Which API version you're using
+X-Response-Time: 45ms             ← How long the server took to process
+
+Custom headers are useful for debugging. If an API call fails and you need to contact support, the X-Request-ID helps them find your specific request in their logs.
