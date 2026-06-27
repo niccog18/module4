@@ -1,0 +1,121 @@
+Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+    Read and navigate API documentation to find the information you need
+    Identify the key sections of well-structured API docs
+    Explain why API versioning exists and the common versioning strategies
+    Recognize OpenAPI/Swagger documentation format
+
+You can have the most brilliantly designed API in the world, but if no one can figure out how to use it, it's worthless. API documentation is the instruction manual, and reading it fluently is a skill that saves you hours of trial and error.
+
+Think about assembling furniture. You could ignore the instructions and figure it out by looking at the parts. But the instructions tell you exactly which screw goes where, what tools you need, and what the finished product should look like. API documentation does the same thing: it tells you what endpoints exist, what data to send, and what you'll get back.
+
+
+What Good API Docs Include
+----------------------------------
+Well-documented APIs consistently provide these sections:
+
+Base URL - The root address all endpoints share.
+<https://api.example.com/v1>
+
+Authentication - How to prove your identity. Which method (API key, JWT, OAuth), where to put the credential, and how to get one.
+
+Endpoints - The core of the documentation. For each endpoint:
+
+    The method and path: GET /users/{id}
+    A description of what it does
+    Path parameters: what {id} means
+    Query parameters: optional filters, pagination, sorting
+    Request body schema: what data to send (for POST/PUT/PATCH)
+    Response schema: what data you'll get back
+    Status codes: what each possible response means
+    Example requests and responses
+
+Rate Limits - How many requests you can make per minute/hour/day.
+
+Error Format - What error responses look like so you can parse them programmatically.
+
+
+Reading an Endpoint Entry
+----------------------------------
+Here's what a typical endpoint documentation looks like:
+GET /users/{user_id}/posts
+
+Description: Returns all posts by the specified user.
+
+Path Parameters:
+  - user_id (integer, required): The ID of the user
+
+Query Parameters:
+  - status (string, optional): Filter by status. Values: "draft", "published"
+  - limit (integer, optional): Max results to return. Default: 20, Max: 100
+  - offset (integer, optional): Number of results to skip. Default: 0
+
+Headers:
+  - Authorization: Bearer <token> (required)
+
+Response 200:
+  {
+    "data": [
+      {
+        "id": 1,
+        "title": "My First Post",
+        "status": "published",
+        "created_at": "2024-01-15T10:30:00Z"
+      }
+    ],
+    "total": 42,
+    "limit": 20,
+    "offset": 0
+  }
+
+Response 401:
+  { "error": "Authentication required" }
+
+Response 404:
+  { "error": "User not found" }
+
+From this entry alone, you can write the complete Python code to call this endpoint. That's the power of good documentation.
+
+
+OpenAPI / Swagger
+----------------------------------
+OpenAPI (formerly Swagger) is a standard format for describing REST APIs. Instead of writing documentation by hand, developers write a specification file (usually YAML or JSON), and tools automatically generate interactive documentation.
+
+You've already seen this in action if you've looked at FastAPI's auto-generated docs, FastAPI produces an OpenAPI specification automatically, which powers the Swagger UI you'll use heavily in Module 5.
+
+Swagger UI lets you:
+
+    Browse all endpoints visually
+    See request/response schemas
+    Make live API calls directly from the browser
+    See which fields are required vs. optional
+
+When you build your own APIs, you'll get this for free with FastAPI.
+
+
+API Versioning
+----------------------------------
+APIs change over time. New features get added, response formats evolve, old endpoints get removed. But if you change an API that other people depend on, you break their code. Versioning solves this by letting old and new versions coexist.
+
+URL Path Versioning (most common):
+<https://api.example.com/v1/users>
+<https://api.example.com/v2/users>
+
+The version is right in the URL. Clear, obvious, easy to switch between.
+
+Header Versioning:
+GET /users
+Accept: application/vnd.example.v2+json
+
+The version is in a header. The URL stays clean, but it's less visible.
+
+Query Parameter Versioning:
+GET /users?version=2
+
+Less common, but some APIs use it.
+
+In practice, you'll mostly encounter URL path versioning. When API docs say "v1" or "v2" in the base URL, that's this pattern.
+
+Why it matters to you: When reading documentation, always check which version you're looking at. If the docs show v2 but you're calling v1, the response format might be different. When you build APIs in Module 5, you'll design with versioning in mind.
