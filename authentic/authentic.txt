@@ -1,0 +1,163 @@
+Learning Objectives
+
+By the end of this lesson, you will be able to:
+
+    Explain why APIs need authentication and the difference between authentication and authorization
+    Describe how API keys, JWT tokens, and OAuth work at a conceptual level
+    Identify which authentication method is appropriate for different use cases
+    Recognize common authentication patterns when reading API documentation
+
+So far, every API call we've made has been to public endpoints, no passwords, no tokens, no proof of identity. That works for JSONPlaceholder, which is a free testing API that anyone can access. But most real-world APIs need to know who's calling them and whether that person is allowed to do what they're asking.
+
+Think about a building. The front lobby is public, anyone can walk in. But to get past the reception desk, you need a visitor badge. To access the server room, you need a special keycard. And even with a keycard, you might only be allowed in during business hours.
+
+APIs work the same way. Some endpoints are open. Others require you to identify yourself. And even after identifying yourself, you might only have access to certain resources or certain actions.
+
+
+Authentication vs. Authorization
+----------------------------------
+These two terms sound similar but mean different things:
+
+Authentication - Who are you? Proving your identity. Like showing your ID at the door.
+
+Authorization - What are you allowed to do? Determining your permissions. Like checking if your keycard grants access to this specific room.
+
+Authentication happens first. The server verifies your identity. Then authorization kicks in, the server checks what that identity is allowed to do.
+
+A 401 status code means authentication failed (who are you?). A 403 means authorization failed (you're not allowed here). This distinction matters when debugging.
+
+
+Method 1: API Keys
+----------------------------------
+The simplest form of authentication. An API key is a long, unique string that identifies your application.
+
+How it works:
+
+    You register on the API provider's website
+    They give you a key: sk-abc123def456ghi789
+    You include the key with every request
+
+Where the key goes varies by API:
+# In a query parameter (simple but less secure — visible in URLs and logs)
+requests.get("<https://api.example.com/data?api_key=sk-abc123def456ghi789>")
+
+# In a header (preferred — not visible in URLs)
+requests.get(
+    "<https://api.example.com/data>",
+    headers={"X-API-Key": "sk-abc123def456ghi789"}
+)
+
+When to use API keys:
+
+    Server-to-server communication
+    Simple applications where you control the client
+    Third-party service integrations (weather APIs, AI APIs, etc.)
+
+Limitations:
+
+    A key identifies the application, not the user. If you need per-user access control, API keys aren't enough.
+    If the key leaks, anyone can use it. There's no expiration built in (though providers usually let you rotate keys).
+
+Most of the AI APIs you'll use in this course (OpenAI, Anthropic) use API keys. When you see OPENAI_API_KEY in a .env file, that's this pattern.
+
+
+Method 2: JWT (JSON Web Tokens)
+----------------------------------
+JWT (pronounced "jot") is the standard for user-level authentication in modern web applications. It's what you'll implement in Module 5.
+
+How it works:
+
+    The user sends their username and password to a login endpoint
+    The server verifies the credentials and creates a JWT token
+    The server sends the token back to the client
+    The client includes the token in the Authorization header of every subsequent request
+    The server reads the token to identify the user, no need to check the database again
+
+What a JWT looks like:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFsaWNlIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+That's three parts, separated by dots:
+
+    Header - algorithm and token type
+    Payload - user data (ID, name, role, expiration time)
+    Signature - cryptographic proof that the token hasn't been tampered with
+
+The key insight: the payload is not encrypted, anyone can decode it and see the user ID and name. But the signature ensures no one can change it without the server's secret key. It's like a driver's license, anyone can read your name, but only the DMV can issue a valid one.
+
+The flow in practice:
+1. POST /auth/login  { "email": "alice@example.com", "password": "secret" }
+   → Server returns: { "access_token": "eyJhb..." }
+
+2. GET /users/me  (Authorization: Bearer eyJhb...)
+   → Server decodes the token, identifies Alice, returns her profile
+
+3. GET /users/me/orders  (Authorization: Bearer eyJhb...)
+   → Same token, different resource — server knows it's still Alice
+
+When to use JWT:
+
+    Web applications with user accounts
+    Mobile apps
+    Any situation where individual users need different access levels
+
+Key properties:
+
+    Tokens expire (usually 15 minutes to 24 hours)
+    Tokens are stateless, the server doesn't store them (it can verify them using the signature)
+    Tokens carry user data, so the server doesn't need a database lookup on every request
+
+
+Method 3: OAuth 2.0 (Overview)
+----------------------------------
+OAuth is the "Sign in with Google" or "Connect your GitHub" pattern. It's more complex than API keys or JWT, but it solves a specific problem: letting a third-party application access your data without giving it your password.
+
+The problem OAuth solves:
+
+You want an app called "CodeTracker" to read your GitHub repositories. Without OAuth, you'd have to give CodeTracker your GitHub password. That's terrible, now CodeTracker has your password and could do anything with your GitHub account.
+
+How OAuth works (simplified):
+
+    CodeTracker redirects you to GitHub's login page
+    You log in to GitHub directly (CodeTracker never sees your password)
+    GitHub asks: "CodeTracker wants to read your repositories. Allow?"
+    You click "Allow"
+    GitHub gives CodeTracker a limited access token
+    CodeTracker uses that token to read your repos, but can't delete them, change your password, or do anything else
+
+The key principle: the user authenticates with the original service (GitHub), and the third-party app gets a limited token with only the permissions the user approved.
+
+You won't implement OAuth in this course, but you'll encounter it when using APIs that require it. Understanding the concept helps you follow the setup instructions.
+
+Which Method When?
+----------------------------------
+Scenario
+	1. Usuers logging into your web app 
+    2. Free public API with usage
+Method
+	1. JWT 
+    2. API Key 
+Why
+	1. Per-user authentication, stateless tokens
+    2. Simple, identifies the app for rate limiting
+Calling the OpenAI API from your server
+	1. "Sign in with Google" on your site
+    2. Internal microservice communication
+API Key
+	1. OAuth 2.0
+    2. API Key or JWT
+Server-to-server, one application identity
+    1. User authenticates with Google, your app gets limited access
+    2. Depends on whether services act as users or apps
+
+
+Security Rules (Start Learning These Now)
+----------------------------------
+Regardless of the method, these rules always apply:
+
+    Never hardcode secrets in your source code. Use environment variables or .env files.
+    Never commit API keys to Git. Add .env to your .gitignore immediately.
+    Use HTTPS, always. HTTP sends everything (including tokens) in plain text.
+    Tokens expire for a reason. Short-lived tokens limit damage if one is stolen.
+    Least privilege. Request only the permissions you actually need.
+
+You'll put these rules into practice in Module 5 when you build JWT authentication from scratch.
