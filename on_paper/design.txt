@@ -1,0 +1,220 @@
+Fitness Tracker
+    - log workouts, exercises, and track progress over time
+=================================
+
+1) Resources - List all the things in your system (minimum 3 resources)
+------------------------------
+    1. Users - represents an account that owns workouts and workout plans
+        Fields:
+            - user_id([int] PK)
+            - username([str] chosen display name/login name)
+            - email([str] usually unique)
+            - password_hash ([str] stores hashed version of password not just plain-text password)
+            - created_at([DateTime/Timestamp] stores date and time when user account created)
+    2. Workouts
+        Fields:
+            - workout_id([int] PK)
+            - user_id([int] Foreign key to users)
+            - workout_date([date] date workout is completed)
+            - duration_minutes([int] total duration in minutes)
+            - notes([str] optional notes about workout session)
+    3. Exercises 
+        Fields:
+            - exercise_id([int] pk)
+            - name([str])
+            - muscle_group([str] primary muscle group targeted by the exercise)
+            - equipment([str] equipment required to do exercise)
+            - description([str] brief instructions/details about exercise)
+    4. Workout Exercises
+        Fields:
+            - workout_id([int] PK, Foreign key-referencing workout containing the exercise)
+            - exercise_id([int] PK, Foreign key-referencing the exercise being performed)
+            - sets([int] # of sets completed)
+            - reps ([int] # of repetitions per set)
+            - weight([decimal] weight in lbs or kg)
+            - duration_seconds([int] duration of exercise when applicable- ex: running, swimming, isometric holds)
+    5. Workout plans
+        Fields:
+            - plan_id([int] PK)
+            - user_id([int] Foreign key-identifies owner of the workout plan)
+            - plan_name([str] name of workout plan)
+            - goal([str] fitness goal that workout plan is designed to achieve)
+            - created_at([Datetime/Timestamp] date and time workout plan is created)
+
+2) Relationships - How do they connect? (at least one one-to-many and identify any many-to-many)
+------------------------------
+One-to-Many:
+User(1)
+    |
+    |---> Workout(Many)
+    |----> Workout Plan(Many)
+
+Many-to-Many:
+Workout
+    |
+    |--- Workout_Exercises ---
+    |
+Exercise
+
+3) Endpoints - Full CRUD for your primary resource, plus at least 3 endpoints for related resources. Include the HTTP method and URI for each.
+------------------------------
+Primary Resource: Workouts
+    Create Workout(creates a new workout)  
+        POST /workouts
+    
+    Get All Workouts(returns all workouts for the authenticated user)
+        GET /workouts
+
+    Get Workout by ID(returns one workout)
+        GET /workouts/{workout_id}
+
+    Update Workout
+        PUT /workouts/{workout_id}
+
+    Delete Workout
+        DELETE /workouts/{workout_id}
+
+Related Resource Endpoints
+    Exercises
+        Get All Exercises
+            GET /exercises
+        Create Exercise(creates a custom exercise)
+            POST / exercises
+    Workout Plans
+        Get User Workout Plans(returns all workout plans)
+            GET /plans
+        Create Workout Plan
+            POST /plans
+    Workout Exercises(adds an exercise to a workout)
+        Add Exercise to Workout
+            POST /workouts/{workout_id}/exercises
+        Get Exercises for a Workout(returns every exercise in a workout)
+            GET /workouts/{workout_id}/exercises
+    
+4) Schemas - Request and response schemas for at least 2 POST endpoints and 2 GET endpoints
+------------------------------
+POST /workouts
+Request
+{
+ "workout_date": "2026-06-27",
+ "duration_minutes": 60,
+ "notes": "Leg day"
+}
+
+Response (201 Created)
+{
+  "workout_id": 14,
+  "user_id": 5,
+  "workout_date": "2026-06-27",
+  "duration_minutes": 60,
+  "notes": "Leg day"
+}
+
+POST /plans
+Request
+{
+ "plan_name": "Push Day",
+ "goal": "Strength"
+}
+
+Response (201 Created)
+{
+  "plan_id": 3,
+  "user_id": 5,
+  "plan_name": "Push Day",
+  "goal": "Strength"
+}
+
+GET /workouts
+Response (200 OK)
+[
+  {
+    "workout_id": 14,
+    "workout_date": "2026-06-27",
+    "duration_minutes": 60,
+    "notes": "Leg day"
+  },
+  {
+    "workout_id": 15,
+    "workout_date": "2026-06-28",
+    "duration_minutes": 45,
+    "notes": "Cardio"
+  }
+]
+
+GET /workouts/{workout_id}
+Response (200 OK)
+{
+  "workout_id": 14,
+  "user_id": 5,
+  "workout_date": "2026-06-27",
+  "duration_minutes": 60,
+  "notes": "Leg day",
+  "exercises": [
+    {
+      "exercise_id": 2,
+      "name": "Squat",
+      "sets": 4,
+      "reps": 8,
+      "weight": 225
+    },
+    {
+      "exercise_id": 5,
+      "name": "Leg Press",
+      "sets": 3,
+      "reps": 10,
+      "weight": 300
+    }
+  ]
+}
+
+5) Authentication - Which endpoints are public? Which require login? Who can access what?
+Authentication uses JWT (JSON Web Tokens).
+------------------------------
+
+=== Authentication ===
+
+Public Endpoints
+POST /register
+POST /login
+GET /exercises
+
+Anyone can view the exercise library.
+
+=== Authenticated User Endpoints ===
+
+Users must be logged in to:
+POST /workouts
+GET /workouts
+GET /workouts/{id}
+PUT /workouts/{id}
+DELETE /workouts/{id}
+POST /plans
+GET /plans
+POST /workouts/{id}/exercises
+GET /workouts/{id}/exercises
+Authorization Rules
+
+Users may:
+View only their own workouts.
+Edit only their own workouts.
+Delete only their own workouts.
+Create their own workout plans.
+
+Users cannot:
+Access another user's fitness data.
+Modify another user's workout plans.
+
+6) Error responses - For your most important endpoint, list all possible status codes and what they mean
+------------------------------
+Error Responses
+Endpoint
+POST /workouts
+Status Code	Meaning
+201 Created	Workout successfully created.
+400 Bad Request	Invalid or missing required fields in the request.
+401 Unauthorized	User is not logged in or token is missing/invalid.
+403 Forbidden	User does not have permission to perform the action.
+404 Not Found	Requested user or related resource was not found.
+409 Conflict	Duplicate workout detected (optional business rule).
+500 Internal Server Error	An unexpected server error occurred.

@@ -1,0 +1,68 @@
+# Walkthrough: Designing a Bookstore API
+
+# Let's walk through the design process for a simpler domain, an online bookstore.
+
+# Step 1: List the resources
+Resources:
+- Books
+- Authors
+- Categories
+- Reviews
+
+# Step 2: Map relationships
+- An Author has many Books (one-to-many)
+- A Book has one Author (simplifying — no co-authors)
+- A Book has many Categories (many-to-many)
+- A Book has many Reviews (one-to-many)
+- A Review belongs to one Book and one User
+
+# Step 3: Design endpoints
+BOOKS
+  GET    /books                  ← List all books
+  GET    /books?category=fiction&min_rating=4  ← Filtered list
+  GET    /books/{id}             ← Get book details
+  POST   /books                  ← Add a new book (admin only)
+  PUT    /books/{id}             ← Update book info (admin only)
+  DELETE /books/{id}             ← Remove a book (admin only)
+
+AUTHORS
+  GET    /authors                ← List all authors
+  GET    /authors/{id}           ← Get author details
+  GET    /authors/{id}/books     ← Get all books by this author
+
+REVIEWS
+  GET    /books/{id}/reviews     ← Get reviews for a book
+  POST   /books/{id}/reviews     ← Write a review (logged-in users)
+  DELETE /books/{id}/reviews/{review_id}  ← Delete your review
+
+CATEGORIES
+  GET    /categories             ← List all categories
+  GET    /categories/{id}/books  ← Get books in a category
+
+# Step 4: Define a key schema
+GET /books/{id} — Response (200):
+{
+  "id": 42,
+  "title": "Clean Code",
+  "author": {
+    "id": 7,
+    "name": "Robert C. Martin"
+  },
+  "categories": ["programming", "software-engineering"],
+  "price": 34.99,
+  "rating": 4.5,
+  "review_count": 128,
+  "published_date": "2008-08-01",
+  "isbn": "978-0132350884"
+}
+
+POST /books/{id}/reviews — Request Body:
+{
+  "rating": 5,         ← integer, 1-5, required
+  "title": "Great read", ← string, optional
+  "body": "This book changed how I think about code." ← string, required
+}
+
+# Notice: the book response nests the author object rather than just including author_id. This is a common pattern, it saves the client from making a second request to look up the author's name.
+
+# This entire design was done without writing any Python. When it's time to build in Module 5, the design document becomes your implementation roadmap.
