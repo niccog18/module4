@@ -1,136 +1,346 @@
-# Module 4 Project — Part 2: Study Tracker API Design
+# Updated based on feedback
+# Module 4 Project — Part 2: API Documentation
 
-**Your Name:** Nicco Gonzalez
+**Name:** Nicco Gonzalez
 **Date:** 06-28-2026
 
 ---
 
-## The App: Study Tracker
+# Introduction
 
-Design a REST API for a "Study Tracker" app. Students can:
-- Log study sessions (course, duration, notes)
-- Set study goals (target hours per course per week)
-- View their progress and summaries
+This document summarizes the three public APIs explored in `api_explorer.py`. For each API, it includes the base URL, authentication requirements, endpoints tested, sample requests and responses, any observed rate limits, and noteworthy behaviors encountered during testing.
 
 ---
 
-## Section 1 — Resources
+# API 1: JSONPlaceholder
 
-List the resources your API will manage. Suggested: Students, Courses, Study Sessions, Goals.
+## Overview
 
-| Resource       | Key Attributes |
-|----------------|----------------|
-| Students       | student_id, name, email |
-| Courses        | course_id, course_name, department |
-| Study Sessions | session_id, student_id, course_id, duration, notes, created_at |
-| Goals          | goal_id, student_id, course_id, target_hours, week_start |
+JSONPlaceholder is a free fake REST API used for testing and learning HTTP requests. It allows developers to practice GET, POST, PUT, PATCH, and DELETE requests without modifying real data.
 
-
----
-
-## Section 2 — Relationships
-
-Describe how your resources relate to each other:
-
-- Student ↔ Course:  Many-to-many (students enroll in multiple courses)
-- Student ↔ Study Session: One-to-many (a student can log many sessions)
-- Course ↔ Study Session: One-to-many (each session belongs to one course)
-- Student ↔ Goal: One-to-many (each student can set multiple goals per course/week)
-
-
----
-
-## Section 3 — Endpoints
-
-Design at least:
-- Full CRUD for study_sessions (5 endpoints)
-- 3+ endpoints for related resources
-- 1+ filtering endpoint
-
-| Method | URI                     | Description                  | Auth Required? |
-|--------|-------------------------|------------------------------|----------------|
-| GET    | /students               | List all students            | Yes            |
-| GET    | /students/{id}          | Get single student           | Yes            |
-| POST   | /students               | Create new student           | Yes            |
-| PUT    | /students/{id}          | Update student               | Yes            |
-| DELETE | /students/{id}          | Delete student               | Yes            |
-| GET    | /study_sessions         | Get all study sessions       | Yes            |
-| POST   | /study_sessions         | Create a study session       | Yes            |
-| PUT    | /study_sessions/{id}    | Update session               | Yes            |
-| DELETE | /study_sessions/{id}    | Delete session               | Yes            |
-| GET    | /students/{id}/progress | Get progress summary         | Yes            |
-| GET    | /courses?department=CS  | Filter courses by department | Yes            |
-
----
-
-## Section 4 — Request/Response Schemas
-
-### POST /study_sessions — Create a new session
-
-**Request body:**
-```json
-{
-  "student_id": 1,
-  "course_id": 101,
-  "duration_minutes": 90,
-  "notes": "Reviewed REST API concepts and practiced endpoints"
-}
+### Base URL
 
 ```
-
-**Success response (201):**
-```json
-{
-  "session_id": 501,
-  "student_id": 1,
-  "course_id": 101,
-  "duration_minutes": 90,
-  "notes": "Reviewed REST API concepts and practiced endpoints",
-  "created_at": "2026-06-28T12:00:00Z"
-}
-
+https://jsonplaceholder.typicode.com
 ```
 
-### GET /students/{id}/progress
+### Authentication
 
-**Response (200):**
+No authentication is required.
+
+### Endpoints Tested
+
+---
+
+### 1. GET /users
+
+**Request**
+
+```http
+GET https://jsonplaceholder.typicode.com/users
+```
+
+**Purpose**
+
+Retrieves a list of all users.
+
+**Sample Response**
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Leanne Graham",
+    "username": "Bret",
+    "email": "Sincere@april.biz"
+  }
+]
+```
+
+---
+
+### 2. GET /posts?userId=1
+
+**Request**
+
+```http
+GET https://jsonplaceholder.typicode.com/posts?userId=1
+```
+
+**Purpose**
+
+Retrieves all posts created by User 1.
+
+**Sample Response**
+
+```json
+[
+  {
+    "userId": 1,
+    "id": 1,
+    "title": "sunt aut facere repellat provident occaecati",
+    "body": "quia et suscipit..."
+  }
+]
+```
+
+---
+
+### 3. POST /posts
+
+**Request**
+
+```http
+POST https://jsonplaceholder.typicode.com/posts
+```
+
+**Request Body**
+
 ```json
 {
-  "student_id": 1,
-  "total_hours_this_week": 12.5,
-  "goals": [
+  "title": "Learning REST APIs",
+  "body": "Testing POST request",
+  "userId": 1
+}
+```
+
+**Sample Response**
+
+```json
+{
+  "title": "Learning REST APIs",
+  "body": "Testing POST request",
+  "userId": 1,
+  "id": 101
+}
+```
+
+**Purpose**
+
+Creates a simulated post and returns the created object.
+
+### Rate Limits
+
+No rate limits were encountered during testing.
+
+### Surprise / Unexpected Behavior
+
+Although the POST request returns a newly created object with an ID, the data is not permanently saved. JSONPlaceholder simulates successful POST requests without modifying any actual database.
+
+---
+
+# API 2: PokeAPI
+
+## Overview
+
+PokeAPI is a free REST API that provides detailed information about Pokémon, abilities, moves, types, species, and many other game resources.
+
+### Base URL
+
+```
+https://pokeapi.co/api/v2
+```
+
+### Authentication
+
+No authentication is required.
+
+### Endpoints Tested
+
+---
+
+### 1. GET /pokemon/25
+
+**Request**
+
+```http
+GET https://pokeapi.co/api/v2/pokemon/25
+```
+
+**Purpose**
+
+Retrieves information about Pikachu.
+
+**Sample Response**
+
+```json
+{
+  "id": 25,
+  "name": "pikachu",
+  "height": 4,
+  "weight": 60,
+  "abilities": [
     {
-      "course_id": 101,
-      "target_hours": 10,
-      "completed_hours": 8.5
+      "ability": {
+        "name": "static"
+      }
     }
-  ],
-  "completion_percentage": 83
+  ]
 }
 ```
 
 ---
 
-## Section 5 — Authentication
+### 2. Follow Pokémon Type URL
 
-| Endpoint                   | Auth Required | Notes                  |
-|----------------------------|---------------|------------------------|
-|GET /courses	             |     Yes 	     | View available courses |
-|POST /study_sessions	     |     Yes 	     | Must be logged in      |
-|GET /students/{id}/progress |	   Yes	     | Private student data   |
-|DELETE /study_sessions/{id} |	   Yes	     | Only owner can delete  |
+After retrieving Pikachu, the script follows the URL contained in the response:
 
-**Auth method and rationale:**
-> Token-based authentication (e.g., JWT) would be used to ensure only logged-in students can create, modify, or view personal study data. This protects private academic activity and prevents unauthorized access.
+```
+https://pokeapi.co/api/v2/type/13/
+```
+
+**Purpose**
+
+Retrieves all Pokémon that share Pikachu's Electric type.
+
+**Sample Response (Partial)**
+
+```json
+{
+  "pokemon": [
+    {
+      "pokemon": {
+        "name": "pikachu"
+      }
+    },
+    {
+      "pokemon": {
+        "name": "raichu"
+      }
+    }
+  ]
+}
+```
+
+### Rate Limits
+
+No rate limits were encountered during testing.
+
+### Surprise / Unexpected Behavior
+
+One interesting feature of PokeAPI is that many responses contain URLs pointing to related resources instead of embedding all information in a single response. This allows applications to follow links to retrieve additional data only when needed.
 
 ---
 
-## Section 6 — Error Responses for POST /study_sessions
+# API 3: REST Countries
 
-| Status Code | When it occurs                                                                |
-|-------------|-------------------------------------------------------------------------------|
-|     201     | Study session created successfully                                            |
-|     400     | Missing or invalid input data                                                 |
-|     401     | User is not authenticated                                                     |
-|     404     | Student or course not found                                                   |
-|     422     | Valid request format but semantic validation failed (e.g., negative duration) |
+## Overview
+
+REST Countries provides country information including names, capitals, regions, populations, currencies, languages, flags, and more.
+
+### Base URL
+
+```
+https://restcountries.com/v3.1
+```
+
+### Authentication
+
+No authentication is required.
+
+### Endpoints Tested
+
+---
+
+### 1. GET /name/japan
+
+**Request**
+
+```http
+GET https://restcountries.com/v3.1/name/japan
+```
+
+**Purpose**
+
+Retrieves information about Japan.
+
+**Sample Response**
+
+```json
+[
+  {
+    "name": {
+      "official": "Japan"
+    },
+    "capital": [
+      "Tokyo"
+    ],
+    "population": 123294513,
+    "region": "Asia"
+  }
+]
+```
+
+---
+
+### 2. GET /region/asia
+
+**Request**
+
+```http
+GET https://restcountries.com/v3.1/region/asia
+```
+
+**Purpose**
+
+Returns all countries located in Asia.
+
+**Sample Response (Partial)**
+
+```json
+[
+  {
+    "name": {
+      "common": "Japan"
+    }
+  },
+  {
+    "name": {
+      "common": "China"
+    }
+  }
+]
+```
+
+---
+
+### 3. GET /name/thiscountrydoesnotexist
+
+**Request**
+
+```http
+GET https://restcountries.com/v3.1/name/thiscountrydoesnotexist
+```
+
+**Purpose**
+
+Tests how the API handles requests for nonexistent resources.
+
+**Response**
+
+```
+404 Not Found
+```
+
+The script checks the status code and prints a friendly message instead of crashing.
+
+### Rate Limits
+
+No rate limits were encountered during testing.
+
+### Surprise / Unexpected Behavior
+
+Instead of returning an empty list when a country is not found, REST Countries returns a 404 Not Found response. This required checking the response status before attempting to process the JSON data.
+
+---
+
+# Overall Observations
+
+* All three APIs use REST principles and return JSON responses.
+* None of the APIs required authentication for the endpoints tested.
+* The APIs were straightforward to consume using Python's `requests` library.
+* JSONPlaceholder is useful for practicing CRUD operations without affecting real data.
+* PokeAPI demonstrates a linked-resource design by including URLs to related resources in many responses.
+* REST Countries provides comprehensive geographic data while using standard HTTP status codes for error handling.
+
+Overall, these APIs provided valuable experience making GET and POST requests, handling successful and unsuccessful responses, parsing JSON, and understanding how different REST APIs organize and expose their resources.
